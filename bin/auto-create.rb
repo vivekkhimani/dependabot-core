@@ -36,19 +36,10 @@
 # - pub
 # - swift
 # - devcontainers
-# - dotnet_sdk
 
 # rubocop:disable Style/GlobalVars
 
 require "etc"
-unless Etc.getpwuid(Process.uid).name == "dependabot" || ENV["ALLOW_DRY_RUN_STANDALONE"] == "true"
-  puts <<~INFO
-    bin/dry-run.rb is only supported in a development container.
-
-    Please use bin/docker-dev-shell first.
-  INFO
-  exit 1
-end
 
 $LOAD_PATH << "./bundler/lib"
 $LOAD_PATH << "./cargo/lib"
@@ -56,7 +47,6 @@ $LOAD_PATH << "./common/lib"
 $LOAD_PATH << "./composer/lib"
 $LOAD_PATH << "./devcontainers/lib"
 $LOAD_PATH << "./docker/lib"
-$LOAD_PATH << "./dotnet_sdk/lib"
 $LOAD_PATH << "./elm/lib"
 $LOAD_PATH << "./git_submodules/lib"
 $LOAD_PATH << "./github_actions/lib"
@@ -84,7 +74,6 @@ require "json"
 require "debug"
 require "logger"
 require "dependabot/logger"
-require "stackprof"
 
 Dependabot.logger = Logger.new($stdout)
 
@@ -102,7 +91,6 @@ require "dependabot/cargo"
 require "dependabot/composer"
 require "dependabot/devcontainers"
 require "dependabot/docker"
-require "dependabot/dotnet_sdk"
 require "dependabot/elm"
 require "dependabot/git_submodules"
 require "dependabot/github_actions"
@@ -263,11 +251,6 @@ option_parse = OptionParser.new do |opts|
   opts.on("--security-updates-only",
           "Only update vulnerable dependencies") do |_value|
     $options[:security_updates_only] = true
-  end
-
-  opts.on("--profile",
-          "Profile using Stackprof. Output in `tmp/stackprof-<datetime>.dump`") do
-    $options[:profile] = true
   end
 
   opts.on("--pull-request",
@@ -463,8 +446,6 @@ def log_conflicting_dependencies(conflicting_dependencies)
     puts "   #{conflicting_dep['explanation']}"
   end
 end
-
-StackProf.start(raw: true) if $options[:profile]
 
 $network_trace_count = 0
 Dependabot::SimpleInstrumentor.subscribe do |*args|
@@ -783,9 +764,6 @@ rescue StandardError => e
   puts " => handled error whilst updating #{dep.name}: #{error_details.fetch(:"error-type")} " \
        "#{error_details.fetch(:"error-detail")}"
 end
-
-StackProf.stop if $options[:profile]
-StackProf.results("tmp/stackprof-#{Time.now.strftime('%Y-%m-%d-%H:%M')}.dump") if $options[:profile]
 
 puts "🌍 Total requests made: '#{$network_trace_count}'"
 
