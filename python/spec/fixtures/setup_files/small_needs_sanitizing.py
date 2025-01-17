@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
-
-file = open("some_file", "r")
-file.read()
+with open("some_file", "r") as file:
+    file.read()
 
 from split_settings import __version__
 

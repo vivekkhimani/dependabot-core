@@ -2,17 +2,16 @@ import codecs
 import io
 import os
 from setuptools import setup, find_packages
-
-file = open("some_file", "r")
-file.read()
-
-file2 = codecs.open("some_file", "r")
-file2.read()
-
-file3 = io.open("some_file", "r")
-file3.read()
-
-file4 = file('README.rst').read()
+with open("some_file", "r") as file:
+    file.read()
+    
+    file2 = codecs.open("some_file", "r")
+    file2.read()
+    
+    file3 = io.open("some_file", "r")
+    file3.read()
+    
+    file4 = file('README.rst').read()
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
